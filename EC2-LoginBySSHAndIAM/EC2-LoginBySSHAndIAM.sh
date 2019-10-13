@@ -4,7 +4,7 @@ EC2_LIST=./ec2login/ec2_list
 EC2_LOGIN_LAST=./ec2login/ec2_login_last
 EC2_LOGIN_HISTORY=./ec2login/ec2_login_history
 
-# Input key file
+# Input parameters
 TARGET_KEY=$1
 TARGET_PROFILE=$2
 TARGET_USER=$3
@@ -45,6 +45,10 @@ TARGET_IP=${ARRAY[$READ_NUM-1]}
 
 echo -e "\n--------------------------------------------------------------------------------\n"
 
-ssh -i ./key/$TARGET_KEY $TARGET_USER@$TARGET_IP
+if [ -z "$TARGET_USER" ]; then
+	ssh -i ./key/$TARGET_KEY $TARGET_IP
+else
+	ssh -i ./key/$TARGET_KEY $TARGET_USER@$TARGET_IP
+fi
 
 echo -e "\n--------------------------------------------------------------------------------\n"
