@@ -5,21 +5,34 @@ EC2_LOGIN_LAST=./ec2login/ec2_login_last
 EC2_LOGIN_HISTORY=./ec2login/ec2_login_history
 
 # Input parameters
-TARGET_KEY=$1
-TARGET_PROFILE=$2
-TARGET_USER=$3
+TARGET_PROFILE=$1
+TARGET_USER=$2
+
+STAGE_KEY=""
+PROD_KEY=""
 
 # Create EC2 List
-aws ec2 describe-instances \
---query 'Reservations[].Instances[].[Tags[?Key==`Name`]|[0].Value, PrivateIpAddress, InstanceId, InstanceType]' \
---filters "Name=instance-state-code,Values=16"  \
---output text | grep -v None | sort -k1 > $EC2_LIST
-
+if [[ "$TARGET_PROFILE" == "stage" ]]; then
+	aws ec2 describe-instances \
+	--query 'Reservations[].Instances[].[Tags[?Key==`Name`]|[0].Value, PrivateIpAddress, Tags[?Key==`Profile`]|[0].Value, InstanceId, InstanceType]' \
+	--filters "Name=instance-state-code,Values=16" "Name=tag:Profile,Values=stage"  \
+	--output text | grep -v None | sort -k1 > $EC2_LIST
+elif [[ "$TARGET_PROFILE" == "prod" ]]; then
+	aws ec2 describe-instances \
+	--query 'Reservations[].Instances[].[Tags[?Key==`Name`]|[0].Value, PrivateIpAddress, Tags[?Key==`Profile`]|[0].Value, InstanceId, InstanceType]' \
+	--filters "Name=instance-state-code,Values=16" "Name=tag:Profile,Values=prod"  \
+	--output text | grep -v None | sort -k1 > $EC2_LIST
+else
+	aws ec2 describe-instances \
+	--query 'Reservations[].Instances[].[Tags[?Key==`Name`]|[0].Value, PrivateIpAddress, Tags[?Key==`Profile`]|[0].Value, InstanceId, InstanceType]' \
+	--filters "Name=instance-state-code,Values=16"  \
+	--output text | grep -v None | sort -k1 > $EC2_LIST
+fi
 
 # Get Select List
 LINE_NUM=1
 ARRAY=()
-echo -e "\nNum \t Name \t\t\t IP \t\t ID \t\t Type"
+echo -e "\nNum \t Name \t\t\t IP \t\t Profile \t ID \t\t Type"
 while read LINE
 do
   echo -e "$LINE_NUM \t $LINE"
@@ -34,14 +47,27 @@ read READ_NUM
 
 # Select EC2
 TARGET_EC2=$(aws ec2 describe-instances \
---query 'Reservations[].Instances[].[PrivateIpAddress, Tags[?Key==`Profile`]|[0].Value, InstanceId, InstanceType]' \
+--query 'Reservations[].Instances[].[PrivateIpAddress, Tags[?Key==`Profile`]|[0].Value, Tags[?Key==`Name`]|[0].Value, InstanceId, InstanceType]' \
 --filters "Name=private-ip-address,Values=${ARRAY[$READ_NUM-1]}"  \
 --output table | grep -v None )
 
-echo -e "$TARGET_EC2"
+echo "$TARGET_EC2"
 echo "$TARGET_EC2" >> $EC2_LOGIN_HISTORY
 
-TARGET_IP=${ARRAY[$READ_NUM-1]}
+if [[ $TARGET_EC2 == *"stage"* ]]; then
+        echo -e "\nThe profile of the server you are trying to connect to is as follows :: Stage\n"
+        TARGET_KEY=$STAGE_KEY
+        
+        TARGET_IP=${ARRAY[$READ_NUM-1]}
+elif [[ $TARGET_EC2 == *"prod"* ]]; then
+        echo -e "\nThe profile of the server you are trying to connect to is as follows: :: Prod\n"
+        TARGET_KEY=$PROD_KEY
+        
+        TARGET_IP=${ARRAY[$READ_NUM-1]}
+else
+        echo "[ERROR] Profile information is required!"
+        exit 9
+fi
 
 echo -e "\n--------------------------------------------------------------------------------\n"
 
