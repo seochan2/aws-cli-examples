@@ -51,16 +51,16 @@ TARGET_EC2=$(aws ec2 describe-instances \
 --filters "Name=private-ip-address,Values=${ARRAY[$READ_NUM-1]}"  \
 --output table | grep -v None )
 
-echo "$TARGET_EC2"
+echo -e "\n\e[1;36m$TARGET_EC2\e[0m"
 echo "$TARGET_EC2" >> $EC2_LOGIN_HISTORY
 
 if [[ $TARGET_EC2 == *"stage"* ]]; then
-        echo -e "\nThe profile of the server you are trying to connect to is as follows :: Stage\n"
+        echo -e "\nThe profile of the server you are trying to connect to is as follows :: \e[1;32mStage\e[0m\n"
         TARGET_KEY=$STAGE_KEY
         
         TARGET_IP=${ARRAY[$READ_NUM-1]}
 elif [[ $TARGET_EC2 == *"prod"* ]]; then
-        echo -e "\nThe profile of the server you are trying to connect to is as follows: :: Prod\n"
+        echo -e "\nThe profile of the server you are trying to connect to is as follows: :: \e[1;31mProd\e[0m\n"
         TARGET_KEY=$PROD_KEY
         
         TARGET_IP=${ARRAY[$READ_NUM-1]}
