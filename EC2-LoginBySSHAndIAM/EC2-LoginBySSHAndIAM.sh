@@ -63,7 +63,8 @@ elif [[ $TARGET_EC2 == *"prod"* ]]; then
         echo -e "\nThe profile of the server you are trying to connect to is as follows: :: \e[1;31mProd\e[0m\n"
         TARGET_KEY=$PROD_KEY
         
-        TARGET_IP=${ARRAY[$READ_NUM-1]}
+        echo "Check the information on the server you are trying to connect to, and enter the IP if it is correct : "
+	        read TARGET_IP
 else
         echo "[ERROR] Profile information is required!"
         exit 9
