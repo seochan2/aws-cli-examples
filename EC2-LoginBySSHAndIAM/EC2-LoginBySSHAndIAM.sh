@@ -22,6 +22,11 @@ elif [[ "$TARGET_PROFILE" == "prod" ]]; then
 	--query 'Reservations[].Instances[].[Tags[?Key==`Name`]|[0].Value, PrivateIpAddress, Tags[?Key==`Profile`]|[0].Value, InstanceId, InstanceType]' \
 	--filters "Name=instance-state-code,Values=16" "Name=tag:Profile,Values=prod"  \
 	--output text | grep -v None | sort -k1 > $EC2_LIST
+elif [[ "$TARGET_PROFILE" == "final" ]]; then
+	aws ec2 describe-instances \
+	--query 'Reservations[].Instances[].[Tags[?Key==`Name`]|[0].Value, PrivateIpAddress, Tags[?Key==`Profile`]|[0].Value, InstanceId, InstanceType]' \
+	--filters "Name=instance-state-code,Values=16" "Name=tag:Profile,Values=final"  \
+	--output text | grep -v None | sort -k1 > $EC2_LIST
 else
 	aws ec2 describe-instances \
 	--query 'Reservations[].Instances[].[Tags[?Key==`Name`]|[0].Value, PrivateIpAddress, Tags[?Key==`Profile`]|[0].Value, InstanceId, InstanceType]' \
@@ -65,6 +70,12 @@ elif [[ $TARGET_EC2 == *"prod"* ]]; then
         
         echo "Check the information on the server you are trying to connect to, and enter the IP if it is correct : "
 	        read TARGET_IP
+elif [[ $TARGET_EC2 == *"final"* ]]; then
+        echo -e "\nThe profile of the server you are trying to connect to is as follows: :: \e[1;31mFinal\e[0m\n"
+        TARGET_KEY=$PROD_KEY
+        
+        echo "Check the information on the server you are trying to connect to, and enter the IP if it is correct : "
+		read TARGET_IP
 else
         echo "[ERROR] Profile information is required!"
         exit 9
